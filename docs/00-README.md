@@ -99,7 +99,7 @@
 frontend/
   src/
     api/
-    features/
+    pages/
       auth/
       employees/
       departments/
@@ -107,10 +107,10 @@ frontend/
       leave/
       dashboard/
       holidays/
-    pages/
     components/
     hooks/
-    types/
+    query/
+    store/
 
 backend/
   src/main/java/com/example/hr/
