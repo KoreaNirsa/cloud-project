@@ -12,8 +12,7 @@
 ### 구성
 - **Frontend:** React 빌드 결과물을 S3에 업로드하고 CloudFront로 배포
 - **Backend:** Spring Boot 애플리케이션을 EC2에 배포
-- **Database:** RDS MySQL 8 사용
-- **Reverse Proxy:** Nginx가 80/443 요청을 받아 Spring Boot로 전달
+- **Database:** RDS 또는 EC2 MySQL 8 사용
 
 ---
 
@@ -25,9 +24,9 @@
     → S3 (React 정적 파일)
 
 사용자 브라우저
-  → Nginx (EC2)
-    → Spring Boot (8080)
-      → RDS MySQL
+  → CloudFront
+    → Spring Boot (EC2, 8080)
+      → RDS 또는 EC2 MySQL
 ```
 
 ---
@@ -37,9 +36,8 @@
 | 항목 | 이유 |
 |---|---|
 | S3 + CloudFront | 프론트 배포가 쉽고 빠름 |
-| EC2 단일 서버 | 학생 프로젝트에 가장 단순함 |
+| EC2 단일 서버 | 가장 단순한 형태 |
 | RDS | DB 백업/접속 관리가 쉬움 |
-| Nginx | 리버스 프록시와 CORS/SSL 대응에 유리 |
 
 ---
 
@@ -56,14 +54,12 @@
 - HTTPS 제공
 
 ## 4.3 EC2
-- Ubuntu 권장
-- Java 17 설치
-- Nginx 설치
-- Spring Boot jar 또는 Docker 실행
+- RedHat 또는 Amazon Linux 권장
+- Java 21 설치
+- Spring Boot jar 실행
 
-## 4.4 RDS
+## 4.4 RDS 또는 EC2
 - MySQL 8
-- 퍼블릭 오픈 대신 EC2에서 접근 허용 권장
 - 보안 그룹으로 접근 제어
 
 ---
@@ -74,7 +70,7 @@
 |---|---|
 | CloudFront | 사용자가 HTTPS로 접근 |
 | S3 | CloudFront에서만 접근 |
-| EC2 | 80, 443 (사용자), 22 (본인 IP만) |
+| EC2 | CloudFront에서만 접근, 22 (본인 IP만) |
 | RDS | 3306 (EC2 보안 그룹만) |
 
 ---
@@ -108,12 +104,9 @@ VITE_API_BASE_URL=https://api.example.com/api
 
 ## 7.2 백엔드 배포
 1. EC2 생성
-2. Java 17 설치
+2. Java 21 설치
 3. 애플리케이션 빌드
-4. jar 업로드 또는 GitHub Actions로 배포
-5. `application-prod.yml` 또는 환경 변수 설정
-6. Nginx reverse proxy 구성
-7. `/actuator/health` 또는 기본 API로 헬스체크
+4. jar 업로드 배포
 
 ## 7.3 프론트 배포
 1. `npm run build`
@@ -126,63 +119,22 @@ VITE_API_BASE_URL=https://api.example.com/api
 
 ## 8. 백엔드 운영 방식 선택
 
-## 선택지 A. Jar 직접 실행 (권장)
+## Jar 직접 실행 (권장)
 ```bash
 java -jar hr-core-lite.jar
 ```
 
 ### 장점
 - 가장 단순함
-- Docker 지식이 없어도 가능
 
 ### 단점
 - 환경 분리가 Docker보다 약함
 
-## 선택지 B. Docker 실행
-```bash
-docker run -d -p 8080:8080 --env-file .env hr-core-lite:latest
-```
-
-### 장점
-- 배포 환경 일관성
-- CI/CD 구성하기 좋음
-
-### 단점
-- 학생팀에게는 추가 학습이 필요할 수 있음
-
-> **1~2주 프로젝트라면 Jar 직접 실행이 더 현실적**입니다.
-
 ---
 
-## 9. Nginx 예시 설정
+## 9. CORS 체크 포인트
 
-```nginx
-server {
-    listen 80;
-    server_name api.example.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-
-HTTPS는 발표 일정에 맞춰  
-Let's Encrypt 또는 AWS Load Balancer 없이도 진행 가능하지만,  
-가능하면 CloudFront/Route53/ACM 구성을 통해 HTTPS를 적용하는 것이 좋습니다.
-
----
-
-## 10. CORS 체크 포인트
-
-프론트와 백엔드가 서로 다른 도메인에서 동작하면 CORS 설정이 필요합니다.
-
-예시:
-- 프론트: `https://hr-core-lite-front.cloudfront.net`
-- 백엔드: `https://api.hr-core-lite.com`
+프론트와 백엔드가 서로 다른 도메인에서 동작하면 CORS 설정이 필요합니다. (SecurityConfig 참고)
 
 ### 반드시 확인할 것
 - 허용 Origin 설정
@@ -193,7 +145,7 @@ Let's Encrypt 또는 AWS Load Balancer 없이도 진행 가능하지만,
 
 ## 11. 배포 체크리스트
 
-- [ ] RDS 접속 성공
+- [ ] DB 서버 접속 성공
 - [ ] schema.sql 실행 완료
 - [ ] seed.sql 실행 완료
 - [ ] EC2에서 Spring Boot 실행 성공
@@ -201,30 +153,11 @@ Let's Encrypt 또는 AWS Load Balancer 없이도 진행 가능하지만,
 - [ ] 프론트 `VITE_API_BASE_URL` 반영 완료
 - [ ] 브라우저에서 로그인 성공
 - [ ] 출근/휴가 신청/승인 실제 동작 확인
-- [ ] 발표 계정 준비 완료
 - [ ] 장애 시 롤백 방법 확인
 
 ---
 
-## 12. GitHub Actions 권장(선택)
-
-### 프론트
-- push to main
-- build
-- S3 sync
-- CloudFront invalidation
-
-### 백엔드
-- push to main
-- gradle build
-- jar 업로드 또는 SSH 배포
-
-> 시간이 부족하면 GitHub Actions를 **선택 사항**으로 두고,
-> 발표 전에는 수동 배포라도 끝내는 것이 중요합니다.
-
----
-
-## 13. 발표 전 점검 항목
+## 12. 점검 항목
 
 ### 브라우저에서 반드시 해볼 것
 1. 로그인
@@ -242,7 +175,7 @@ Let's Encrypt 또는 AWS Load Balancer 없이도 진행 가능하지만,
 
 ---
 
-## 14. 장애가 났을 때 우선 확인할 것
+## 13. 장애가 났을 때 우선 확인할 것
 
 | 증상 | 먼저 볼 것 |
 |---|---|
@@ -251,16 +184,3 @@ Let's Encrypt 또는 AWS Load Balancer 없이도 진행 가능하지만,
 | DB 연결 실패 | RDS endpoint, 보안 그룹, 계정/비밀번호 |
 | 프론트에서 API 호출 실패 | CloudFront 캐시, env 값, Nginx proxy |
 | 새 코드가 반영 안 됨 | 프론트 재빌드, CloudFront invalidation, EC2 재시작 |
-
----
-
-## 15. 학생 프로젝트용 현실적인 권장안
-
-가장 추천하는 방식은 아래 조합입니다.
-
-- 프론트: **Vercel** 또는 **S3 + CloudFront**
-- 백엔드: **EC2**
-- DB: **RDS**
-- 도메인/SSL: 여유 있으면 적용, 없으면 생략 가능
-
-다만 이번 문서의 기본 방향은 사용자 요청에 맞춰 **AWS 배포 기준**으로 작성했습니다.

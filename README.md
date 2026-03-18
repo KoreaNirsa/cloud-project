@@ -1,8 +1,3 @@
-# HR Core Lite Starter Kit
-
-이 패키지는 학생 3명이 1~2주 동안 진행할 수 있는  
-**HR 시스템(인사 · 근태 · 휴가 관리)** 프로젝트 문서 세트입니다.
-
 ## 바로 시작하기
 - [docs/00-README.md](./docs/00-README.md)
 - [docs/01-project-brief.md](./docs/01-project-brief.md)

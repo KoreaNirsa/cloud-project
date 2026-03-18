@@ -87,12 +87,12 @@ Employee   1 --- N Employee (manager_id 자기참조)
 | hire_date | DATE | NOT NULL | 입사일 |
 | annual_leave_quota | DECIMAL(4,1) | NOT NULL | 연차 부여량 |
 | department_id | BIGINT | FK, NOT NULL | 소속 부서 |
-| manager_id | BIGINT | FK, NULL | 매니저 직원 ID |
+| manager_id | BIGINT | FK, NULL | 매니저 직원(상사) ID |
 | created_at | DATETIME | NOT NULL | 생성일시 |
 | updated_at | DATETIME | NOT NULL | 수정일시 |
 
 ### 비고
-- `manager_id`는 employees 자기참조(Self Reference)입니다.
+- `manager_id`는 employees 자기참조(Self Reference)입니다
 - `ADMIN`은 `manager_id`가 없을 수 있습니다.
 - `employment_status = INACTIVE`이면 로그인 차단을 권장합니다.
 

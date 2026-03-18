@@ -16,16 +16,15 @@ Prod    : https://api.example.com/api
 ```
 
 ## 1.2 인증 방식
-- MVP 권장: **JWT Bearer Token**
+- **세션 방식으로 구현 진행**
+
+- 확장 시 아래 내용으로 진행
 - 로그인 성공 시 access token 발급
 - 이후 요청 헤더에 포함
 
 ```http
 Authorization: Bearer <access-token>
 ```
-
-> Refresh Token은 확장 포인트입니다.  
-> 1~2주 프로젝트라면 access token 단일 방식으로도 충분합니다.
 
 ---
 
@@ -739,9 +738,8 @@ Authorization: Bearer <access-token>
 개별 테이블 API를 프론트에서 여러 번 호출하는 방식도 가능하지만  
 짧은 프로젝트에서는 `/dashboard/*` 조합 API가 더 편합니다.
 
-### 팁 4. Swagger와 Postman을 모두 쓴다
+### 팁 4. Swagger를 모두 사용한다
 - 설계 공유: Swagger/OpenAPI
-- 수동 검증: Postman
 
 ---
 
