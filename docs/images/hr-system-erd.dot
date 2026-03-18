@@ -1,0 +1,84 @@
+
+digraph ERD {
+  graph [rankdir=LR, splines=polyline, nodesep=0.6, ranksep=0.9, pad=0.2, bgcolor="white"];
+  node [shape=plain, fontname="Arial", fontsize=10];
+  edge [color="#64748B", arrowsize=0.7, fontname="Arial", fontsize=10];
+
+  departments [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#DBEAFE"><B>departments</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">code (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">name (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">description</TD></TR>
+    </TABLE>
+  >];
+
+  employees [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#DCFCE7"><B>employees</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">employee_no (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">login_id (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">password_hash</TD></TR>
+      <TR><TD ALIGN="LEFT">name, email, phone</TD></TR>
+      <TR><TD ALIGN="LEFT">role, employment_status</TD></TR>
+      <TR><TD ALIGN="LEFT">hire_date, annual_leave_quota</TD></TR>
+      <TR><TD ALIGN="LEFT">FK department_id</TD></TR>
+      <TR><TD ALIGN="LEFT">FK manager_id (self ref)</TD></TR>
+    </TABLE>
+  >];
+
+  holidays [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#FEF3C7"><B>holidays</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">holiday_date (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">name</TD></TR>
+      <TR><TD ALIGN="LEFT">is_company_holiday</TD></TR>
+    </TABLE>
+  >];
+
+  attendance_records [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#FCE7F3"><B>attendance_records</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">FK employee_id</TD></TR>
+      <TR><TD ALIGN="LEFT">work_date</TD></TR>
+      <TR><TD ALIGN="LEFT">check_in_at</TD></TR>
+      <TR><TD ALIGN="LEFT">check_out_at</TD></TR>
+      <TR><TD ALIGN="LEFT">status</TD></TR>
+      <TR><TD ALIGN="LEFT">UQ employee_id + work_date</TD></TR>
+    </TABLE>
+  >];
+
+  leave_types [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#EDE9FE"><B>leave_types</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">code (UQ)</TD></TR>
+      <TR><TD ALIGN="LEFT">name</TD></TR>
+      <TR><TD ALIGN="LEFT">deducts_from_annual</TD></TR>
+    </TABLE>
+  >];
+
+  leave_requests [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5">
+      <TR><TD BGCOLOR="#FDE68A"><B>leave_requests</B></TD></TR>
+      <TR><TD ALIGN="LEFT">PK id</TD></TR>
+      <TR><TD ALIGN="LEFT">FK employee_id</TD></TR>
+      <TR><TD ALIGN="LEFT">FK approver_id</TD></TR>
+      <TR><TD ALIGN="LEFT">FK leave_type_id</TD></TR>
+      <TR><TD ALIGN="LEFT">start_date, end_date</TD></TR>
+      <TR><TD ALIGN="LEFT">days, reason</TD></TR>
+      <TR><TD ALIGN="LEFT">status</TD></TR>
+      <TR><TD ALIGN="LEFT">requested_at, decision_at</TD></TR>
+    </TABLE>
+  >];
+
+  departments -> employees [label="1:N"];
+  employees -> attendance_records [label="1:N"];
+  employees -> leave_requests [label="requester"];
+  leave_types -> leave_requests [label="1:N"];
+  employees -> employees [label="manager"];
+}

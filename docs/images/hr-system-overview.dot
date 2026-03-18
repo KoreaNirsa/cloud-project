@@ -1,0 +1,45 @@
+
+digraph G {
+  graph [rankdir=LR, splines=polyline, nodesep=0.6, ranksep=0.8, pad=0.2, bgcolor="white"];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, color="#334155", fillcolor="#F8FAFC"];
+  edge [fontname="Arial", fontsize=10, color="#64748B", arrowsize=0.8];
+
+  subgraph cluster_client {
+    label="Client";
+    color="#CBD5E1";
+    style="rounded";
+    browser [label="Browser\n(Employee / Manager / Admin)", fillcolor="#E0F2FE"];
+  }
+
+  subgraph cluster_front {
+    label="Frontend";
+    color="#CBD5E1";
+    style="rounded";
+    react [label="React SPA\nLogin / Dashboard / Employees /\nAttendance / Leave / Holidays", fillcolor="#DCFCE7"];
+    s3 [label="S3", fillcolor="#FEF3C7"];
+    cf [label="CloudFront", fillcolor="#FEF3C7"];
+  }
+
+  subgraph cluster_back {
+    label="Backend";
+    color="#CBD5E1";
+    style="rounded";
+    nginx [label="Nginx", fillcolor="#F5D0FE"];
+    spring [label="Spring Boot API\nAuth / Employee / Department /\nAttendance / Leave / Dashboard", fillcolor="#F5D0FE"];
+  }
+
+  subgraph cluster_data {
+    label="Data";
+    color="#CBD5E1";
+    style="rounded";
+    rds [label="RDS MySQL", fillcolor="#EDE9FE"];
+    seed [label="Seed Data\nEmployees / Leave Types / Holidays", fillcolor="#EDE9FE"];
+  }
+
+  browser -> cf [label="static"];
+  cf -> s3 [label="origin"];
+  browser -> nginx [label="api"];
+  nginx -> spring [label="proxy"];
+  spring -> rds [label="SQL"];
+  seed -> rds [label="init"];
+}

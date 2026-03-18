@@ -1,0 +1,1451 @@
+openapi: 3.0.3
+info:
+  title: HR Core Lite API
+  version: 1.0.0
+  description: 학생 3인 풀스택 팀 프로젝트용 HR 시스템 API 명세서
+servers:
+- url: http://localhost:8080/api
+  description: Local
+- url: https://api.example.com/api
+  description: Production
+tags:
+- name: Auth
+- name: Departments
+- name: Employees
+- name: Attendance
+- name: Leave Types
+- name: Leave Requests
+- name: Dashboard
+- name: Holidays
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: LEAVE_OVERLAP
+            message:
+              type: string
+              example: 이미 겹치는 휴가 신청이 존재합니다.
+          required:
+          - code
+          - message
+      required:
+      - success
+      - error
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 2
+        code:
+          type: string
+          example: ENG
+        name:
+          type: string
+          example: Engineering
+        description:
+          type: string
+          nullable: true
+          example: 개발 조직
+      required:
+      - id
+      - code
+      - name
+    DepartmentRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          example: ENG
+        name:
+          type: string
+          example: Engineering
+        description:
+          type: string
+          nullable: true
+          example: 개발 조직
+      required:
+      - code
+      - name
+    EmployeeSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 3
+        employeeNo:
+          type: string
+          example: E2026003
+        name:
+          type: string
+          example: 이직원
+        role:
+          type: string
+          example: EMPLOYEE
+        employmentStatus:
+          type: string
+          example: ACTIVE
+        department:
+          $ref: '#/components/schemas/Department'
+        manager:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 2
+            name:
+              type: string
+              example: 김매니저
+      required:
+      - id
+      - employeeNo
+      - name
+      - role
+      - employmentStatus
+    EmployeeDetail:
+      allOf:
+      - $ref: '#/components/schemas/EmployeeSummary'
+      - type: object
+        properties:
+          loginId:
+            type: string
+            example: eng.employee
+          email:
+            type: string
+            example: eng.employee@example.com
+          phone:
+            type: string
+            nullable: true
+            example: 010-3000-3000
+          positionTitle:
+            type: string
+            nullable: true
+            example: Backend Developer
+          hireDate:
+            type: string
+            format: date
+            example: '2025-02-03'
+          annualLeaveQuota:
+            type: number
+            format: double
+            example: 15.0
+    EmployeeCreateRequest:
+      type: object
+      properties:
+        employeeNo:
+          type: string
+          example: E2026010
+        loginId:
+          type: string
+          example: new.employee
+        password:
+          type: string
+          format: password
+          example: Passw0rd!
+        name:
+          type: string
+          example: 신입사원
+        email:
+          type: string
+          example: new.employee@example.com
+        phone:
+          type: string
+          nullable: true
+          example: 010-1111-2222
+        role:
+          type: string
+          example: EMPLOYEE
+        positionTitle:
+          type: string
+          nullable: true
+          example: Backend Developer
+        hireDate:
+          type: string
+          format: date
+          example: '2026-03-18'
+        annualLeaveQuota:
+          type: number
+          format: double
+          example: 15.0
+        departmentId:
+          type: integer
+          format: int64
+          example: 2
+        managerId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 2
+      required:
+      - employeeNo
+      - loginId
+      - password
+      - name
+      - email
+      - role
+      - hireDate
+      - annualLeaveQuota
+      - departmentId
+    EmployeeUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: updated@example.com
+        phone:
+          type: string
+          nullable: true
+          example: 010-2222-3333
+        positionTitle:
+          type: string
+          nullable: true
+          example: Senior Backend Developer
+        departmentId:
+          type: integer
+          format: int64
+          example: 2
+        managerId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 2
+    EmployeeStatusRequest:
+      type: object
+      properties:
+        employmentStatus:
+          type: string
+          example: INACTIVE
+      required:
+      - employmentStatus
+    LoginRequest:
+      type: object
+      properties:
+        loginId:
+          type: string
+          example: eng.manager
+        password:
+          type: string
+          format: password
+          example: Passw0rd!
+      required:
+      - loginId
+      - password
+    LoginResponseData:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: jwt-token
+        employee:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 2
+            name:
+              type: string
+              example: 김매니저
+            role:
+              type: string
+              example: MANAGER
+          required:
+          - id
+          - name
+          - role
+      required:
+      - accessToken
+      - employee
+    AttendanceActionResponseData:
+      type: object
+      properties:
+        attendanceId:
+          type: integer
+          format: int64
+          example: 11
+        workDate:
+          type: string
+          format: date
+          example: '2026-03-18'
+        checkInAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T08:57:00'
+        checkOutAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T18:12:00'
+        status:
+          type: string
+          nullable: true
+          example: PRESENT
+      required:
+      - attendanceId
+      - workDate
+    AttendanceRecord:
+      type: object
+      properties:
+        workDate:
+          type: string
+          format: date
+          example: '2026-03-18'
+        checkInAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T08:57:00'
+        checkOutAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T18:12:00'
+        status:
+          type: string
+          example: PRESENT
+      required:
+      - workDate
+      - status
+    TeamAttendanceRecord:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int64
+          example: 3
+        employeeName:
+          type: string
+          example: 이직원
+        departmentName:
+          type: string
+          example: Engineering
+        status:
+          type: string
+          example: PRESENT
+        checkInAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T09:02:00'
+        checkOutAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - employeeId
+      - employeeName
+      - departmentName
+      - status
+    AttendanceMonthResponseData:
+      type: object
+      properties:
+        month:
+          type: string
+          example: 2026-03
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceRecord'
+      required:
+      - month
+      - records
+    LeaveType:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        code:
+          type: string
+          example: ANNUAL
+        name:
+          type: string
+          example: 연차
+        deductsFromAnnual:
+          type: boolean
+          example: true
+      required:
+      - id
+      - code
+      - name
+      - deductsFromAnnual
+    LeaveRequestCreateRequest:
+      type: object
+      properties:
+        leaveTypeId:
+          type: integer
+          format: int64
+          example: 1
+        startDate:
+          type: string
+          format: date
+          example: '2026-03-24'
+        endDate:
+          type: string
+          format: date
+          example: '2026-03-25'
+        reason:
+          type: string
+          example: 개인 일정
+      required:
+      - leaveTypeId
+      - startDate
+      - endDate
+      - reason
+    LeaveRequestUpdateRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          example: '2026-03-25'
+        endDate:
+          type: string
+          format: date
+          example: '2026-03-26'
+        reason:
+          type: string
+          example: 일정 변경
+    LeaveRequestRejectRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: 프로젝트 마감 일정과 겹칩니다.
+      required:
+      - reason
+    LeaveRequestSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 7
+        employee:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 3
+            name:
+              type: string
+              example: 이직원
+        approver:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 2
+            name:
+              type: string
+              example: 김매니저
+        leaveType:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+          example: '2026-03-24'
+        endDate:
+          type: string
+          format: date
+          example: '2026-03-25'
+        days:
+          type: number
+          format: double
+          example: 2.0
+        reason:
+          type: string
+          example: 개인 일정
+        status:
+          type: string
+          example: REQUESTED
+      required:
+      - id
+      - leaveType
+      - startDate
+      - endDate
+      - days
+      - status
+    LeaveRequestCreateResponseData:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 7
+        status:
+          type: string
+          example: REQUESTED
+        days:
+          type: number
+          format: double
+          example: 2.0
+        approver:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 2
+            name:
+              type: string
+              example: 김매니저
+      required:
+      - id
+      - status
+      - days
+    DashboardMe:
+      type: object
+      properties:
+        employeeName:
+          type: string
+          example: 이직원
+        todayAttendanceStatus:
+          type: string
+          example: PRESENT
+        todayCheckInAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-18T08:57:00'
+        todayCheckOutAt:
+          type: string
+          format: date-time
+          nullable: true
+        monthlyAttendanceCount:
+          type: integer
+          example: 12
+        remainingAnnualLeave:
+          type: number
+          format: double
+          example: 11.0
+        pendingApprovalCount:
+          type: integer
+          example: 0
+      required:
+      - employeeName
+      - monthlyAttendanceCount
+      - remainingAnnualLeave
+      - pendingApprovalCount
+    DashboardTeam:
+      type: object
+      properties:
+        teamMemberCount:
+          type: integer
+          example: 5
+        todayPresentCount:
+          type: integer
+          example: 4
+        todayLeaveCount:
+          type: integer
+          example: 1
+        pendingApprovalCount:
+          type: integer
+          example: 2
+      required:
+      - teamMemberCount
+      - todayPresentCount
+      - todayLeaveCount
+      - pendingApprovalCount
+    Holiday:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        holidayDate:
+          type: string
+          format: date
+          example: '2026-05-05'
+        name:
+          type: string
+          example: 어린이날
+        isCompanyHoliday:
+          type: boolean
+          example: false
+      required:
+      - id
+      - holidayDate
+      - name
+      - isCompanyHoliday
+    HolidayRequest:
+      type: object
+      properties:
+        holidayDate:
+          type: string
+          format: date
+          example: '2026-05-05'
+        name:
+          type: string
+          example: 어린이날
+        isCompanyHoliday:
+          type: boolean
+          example: false
+      required:
+      - holidayDate
+      - name
+      - isCompanyHoliday
+    SimpleSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 1
+          required:
+          - id
+      required:
+      - success
+      - data
+security:
+- bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      summary: 로그인
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/LoginResponseData'
+                required:
+                - success
+                - data
+        '401':
+          description: 로그인 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/me:
+    get:
+      tags:
+      - Auth
+      summary: 현재 로그인한 사용자 정보 조회
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/EmployeeDetail'
+                required:
+                - success
+                - data
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /departments:
+    get:
+      tags:
+      - Departments
+      summary: 부서 목록 조회
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Department'
+                required:
+                - success
+                - data
+    post:
+      tags:
+      - Departments
+      summary: 부서 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '409':
+          description: 중복 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /departments/{departmentId}:
+    patch:
+      tags:
+      - Departments
+      summary: 부서 수정
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '404':
+          description: 부서 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /employees:
+    get:
+      tags:
+      - Employees
+      summary: 직원 목록 조회
+      parameters:
+      - name: departmentId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: employmentStatus
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployeeSummary'
+                required:
+                - success
+                - data
+    post:
+      tags:
+      - Employees
+      summary: 직원 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreateRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '409':
+          description: 중복/충돌
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: 부서/매니저 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /employees/{employeeId}:
+    get:
+      tags:
+      - Employees
+      summary: 직원 상세 조회
+      parameters:
+      - &id001
+        name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/EmployeeDetail'
+                required:
+                - success
+                - data
+        '404':
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags:
+      - Employees
+      summary: 직원 수정
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdateRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '404':
+          description: 직원/부서/매니저 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /employees/{employeeId}/status:
+    patch:
+      tags:
+      - Employees
+      summary: 직원 상태 변경
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeStatusRequest'
+      responses:
+        '200':
+          description: 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '404':
+          description: 직원 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /attendance/check-in:
+    post:
+      tags:
+      - Attendance
+      summary: 출근 처리
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: 출근 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AttendanceActionResponseData'
+                required:
+                - success
+                - data
+        '409':
+          description: 중복 출근
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: 휴가일 출근 등 비즈니스 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /attendance/check-out:
+    post:
+      tags:
+      - Attendance
+      summary: 퇴근 처리
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: 퇴근 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AttendanceActionResponseData'
+                required:
+                - success
+                - data
+        '404':
+          description: 출근 기록 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: 이미 퇴근 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /attendance/me:
+    get:
+      tags:
+      - Attendance
+      summary: 내 월간 근태 조회
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 2026-03
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AttendanceMonthResponseData'
+                required:
+                - success
+                - data
+  /attendance/team:
+    get:
+      tags:
+      - Attendance
+      summary: 팀 근태 조회
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2026-03-18'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamAttendanceRecord'
+                required:
+                - success
+                - data
+        '403':
+          description: 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-types:
+    get:
+      tags:
+      - Leave Types
+      summary: 휴가 종류 목록 조회
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveType'
+                required:
+                - success
+                - data
+  /leave-requests/me:
+    get:
+      tags:
+      - Leave Requests
+      summary: 내 휴가 목록 조회
+      parameters:
+      - name: year
+        in: query
+        required: false
+        schema:
+          type: integer
+          example: 2026
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          example: APPROVED
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveRequestSummary'
+                required:
+                - success
+                - data
+  /leave-requests:
+    post:
+      tags:
+      - Leave Requests
+      summary: 휴가 신청
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreateRequest'
+      responses:
+        '201':
+          description: 신청 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/LeaveRequestCreateResponseData'
+                required:
+                - success
+                - data
+        '422':
+          description: 중복/연차부족/날짜오류 등
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-requests/{leaveRequestId}:
+    patch:
+      tags:
+      - Leave Requests
+      summary: 휴가 수정
+      parameters:
+      - &id002
+        name: leaveRequestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestUpdateRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '404':
+          description: 휴가 신청 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: 수정 불가 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-requests/{leaveRequestId}/cancel:
+    patch:
+      tags:
+      - Leave Requests
+      summary: 휴가 취소
+      parameters:
+      - *id002
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: 취소 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '422':
+          description: 취소 불가 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-requests/pending:
+    get:
+      tags:
+      - Leave Requests
+      summary: 승인 대기 목록 조회
+      parameters:
+      - name: departmentId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveRequestSummary'
+                required:
+                - success
+                - data
+        '403':
+          description: 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-requests/{leaveRequestId}/approve:
+    patch:
+      tags:
+      - Leave Requests
+      summary: 휴가 승인
+      parameters:
+      - *id002
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: 승인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '403':
+          description: 승인 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: 승인 불가 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /leave-requests/{leaveRequestId}/reject:
+    patch:
+      tags:
+      - Leave Requests
+      summary: 휴가 반려
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRejectRequest'
+      responses:
+        '200':
+          description: 반려 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '403':
+          description: 반려 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: 반려 불가 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /dashboard/me:
+    get:
+      tags:
+      - Dashboard
+      summary: 내 대시보드 조회
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DashboardMe'
+                required:
+                - success
+                - data
+  /dashboard/team:
+    get:
+      tags:
+      - Dashboard
+      summary: 팀 대시보드 조회
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DashboardTeam'
+                required:
+                - success
+                - data
+        '403':
+          description: 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /holidays:
+    get:
+      tags:
+      - Holidays
+      summary: 공휴일 목록 조회
+      parameters:
+      - name: year
+        in: query
+        required: false
+        schema:
+          type: integer
+          example: 2026
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holiday'
+                required:
+                - success
+                - data
+    post:
+      tags:
+      - Holidays
+      summary: 공휴일 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '409':
+          description: 중복 공휴일
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /holidays/{holidayId}:
+    patch:
+      tags:
+      - Holidays
+      summary: 공휴일 수정
+      parameters:
+      - name: holidayId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleSuccessResponse'
+        '404':
+          description: 공휴일 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
